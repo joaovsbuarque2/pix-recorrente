@@ -1,45 +1,72 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+/* eslint-disable react/react-in-jsx-scope */
+import React, { useEffect } from 'react';
+import auth from '@react-native-firebase/auth';
+// import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StatusBar } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { RootNavigator } from './src/navigation/RootNavigator';
+import { useAuthStore } from './src/store/authStore';
+import { paperTheme } from './src/constants/theme';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+// Temporarily disabled Google Signin configuration
+// GoogleSignin.configure({
+//   webClientId:
+//     '873884409603-oks9r4o4iu4n2ukd6tqasdti5d3he5o6.apps.googleusercontent.com',
+//   offlineAccess: true,
+// });
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+function App(): JSX.Element {
+  const setUser = useAuthStore(state => state.setUser);
+
+  useEffect(() => {
+    const loadUserFromStorage = async () => {
+      try {
+        const userData = await AsyncStorage.getItem('user');
+        if (userData) {
+          const user = JSON.parse(userData);
+          setUser(user);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Error loading user from storage:', error);
+        setUser(null);
+      }
+    };
+
+    loadUserFromStorage();
+
+    const unsubscribe = auth().onAuthStateChanged(user => {
+      if (user) {
+        const userData = {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+        };
+        AsyncStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
+      } else {
+        AsyncStorage.removeItem('user');
+        setUser(null);
+      }
+    });
+
+    return unsubscribe;
+  }, [setUser]);
 
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <PaperProvider theme={paperTheme}>
+        <StatusBar
+          barStyle="light-content"
+          backgroundColor={paperTheme.colors.background}
+        />
+        <RootNavigator />
+      </PaperProvider>
+    </GestureHandlerRootView>
   );
 }
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
 
 export default App;

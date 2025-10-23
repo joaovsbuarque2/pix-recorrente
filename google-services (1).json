@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "873884409603",
+    "project_id": "pixpro-451a2",
+    "storage_bucket": "pixpro-451a2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:873884409603:android:d5e46e14c9e52b1614d336",
+        "android_client_info": {
+          "package_name": "pix.recorente"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "873884409603-f1icfqa6riqkt7evkbh9k1u4ubik28pi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "pix.recorente",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "873884409603-oks9r4o4iu4n2ukd6tqasdti5d3he5o6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCGRG0dFavrsSBlpEp5du0Dbne6eJQkW44"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "873884409603-oks9r4o4iu4n2ukd6tqasdti5d3he5o6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
