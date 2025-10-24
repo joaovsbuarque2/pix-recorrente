@@ -2,11 +2,13 @@ import auth from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
+import { usersService } from '../services/usersService';
 
 interface User {
   uid: string;
   email: string | null;
   displayName: string | null;
+  profileComplete?: boolean;
 }
 
 interface AuthState {
@@ -17,6 +19,7 @@ interface AuthState {
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   setUser: (user: User | null) => void;
+  updateUserProfile: (updates: Partial<User>) => void;
 }
 
 export const useAuthStore = create<AuthState>(set => ({
@@ -48,7 +51,16 @@ export const useAuthStore = create<AuthState>(set => ({
       uid: userCredential.user.uid,
       email: userCredential.user.email,
       displayName: userCredential.user.displayName,
+      profileComplete: false,
     };
+
+    await usersService.createUserProfile(userCredential.user.uid, {
+      displayName: userCredential.user.displayName || email.split('@')[0],
+      email: userCredential.user.email || email,
+      phone: '',
+      pixKey: '',
+    });
+
     await AsyncStorage.setItem('user', JSON.stringify(user));
     await AsyncStorage.setItem('email', email);
     await AsyncStorage.setItem('password', password);
@@ -83,4 +95,9 @@ export const useAuthStore = create<AuthState>(set => ({
   },
 
   setUser: (user: User | null) => set({ user, loading: false }),
+
+  updateUserProfile: (updates: Partial<User>) =>
+    set(state => ({
+      user: state.user ? { ...state.user, ...updates } : null,
+    })),
 }));

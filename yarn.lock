@@ -3811,6 +3811,7 @@ __metadata:
     react: 18.2.0
     react-native: 0.72.17
     react-native-chart-kit: ^6.12.0
+    react-native-date-picker: ^5.0.13
     react-native-gesture-handler: 2.12.1
     react-native-linear-gradient: ^2.8.3
     react-native-paper: ^5.14.5
@@ -12170,6 +12171,16 @@ __metadata:
     react-native: ">= 0.50.0"
     react-native-svg: "> 6.4.1"
   checksum: 04c225965c0ce3c71205a62bc92743e9188458d8f95c12481e43a2e53c425bd5db8274e57ab93c1cb95ffd3fb54950ca92c3d33e518a3505d7697c247b3b7e15
+  languageName: node
+  linkType: hard
+
+"react-native-date-picker@npm:^5.0.13":
+  version: 5.0.13
+  resolution: "react-native-date-picker@npm:5.0.13"
+  peerDependencies:
+    react: ">= 17.0.1"
+    react-native: ">= 0.64.3"
+  checksum: 80a97687571d25cee8b40a9e1d471ccb303cd152d2db2edbc735b3280747e40f42ea626437d81bd5abeced7ed815414195929074295d54c0da54fc7da6e1011e
   languageName: node
   linkType: hard
 

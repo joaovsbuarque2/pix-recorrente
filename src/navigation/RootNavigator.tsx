@@ -1,9 +1,9 @@
 import React from 'react';
-import { Text } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-// import Icon from 'react-native-vector-icons/Ionicons';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../constants/theme';
 import { useAuthStore } from '../store/authStore';
 
@@ -23,22 +23,37 @@ function MainTabs() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          borderTopWidth: 0,
-          elevation: 8,
-          shadowOpacity: 0.1,
-          height: 60,
+          backgroundColor: colors.surface,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          elevation: 0,
+          shadowOpacity: 0,
+          height: 65,
           paddingBottom: 8,
+          paddingTop: 8,
         },
         headerShown: false,
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+          fontFamily: 'Inter-SemiBold',
+        },
       }}
     >
       <Tab.Screen
         name="Dashboard"
         component={DashboardScreen}
         options={{
-          tabBarLabel: 'Dashboard',
-          tabBarIcon: ({ color }) => (
-            <Text style={{ color, fontSize: 16, fontWeight: 'bold' }}>📊</Text>
+          tabBarLabel: 'Início',
+          tabBarIcon: ({ color, focused }) => (
+            <View
+              style={[
+                styles.iconContainer,
+                focused && styles.iconContainerActive,
+              ]}
+            >
+              <Icon name="view-dashboard" size={24} color={color} />
+            </View>
           ),
         }}
       />
@@ -47,8 +62,15 @@ function MainTabs() {
         component={ClientsScreen}
         options={{
           tabBarLabel: 'Clientes',
-          tabBarIcon: ({ color }) => (
-            <Text style={{ color, fontSize: 16, fontWeight: 'bold' }}>👥</Text>
+          tabBarIcon: ({ color, focused }) => (
+            <View
+              style={[
+                styles.iconContainer,
+                focused && styles.iconContainerActive,
+              ]}
+            >
+              <Icon name="account-group" size={24} color={color} />
+            </View>
           ),
         }}
       />
@@ -57,8 +79,15 @@ function MainTabs() {
         component={ChargesScreen}
         options={{
           tabBarLabel: 'Cobranças',
-          tabBarIcon: ({ color }) => (
-            <Text style={{ color, fontSize: 16, fontWeight: 'bold' }}>💳</Text>
+          tabBarIcon: ({ color, focused }) => (
+            <View
+              style={[
+                styles.iconContainer,
+                focused && styles.iconContainerActive,
+              ]}
+            >
+              <Icon name="currency-usd" size={24} color={color} />
+            </View>
           ),
         }}
       />
@@ -67,14 +96,34 @@ function MainTabs() {
         component={ProfileScreen}
         options={{
           tabBarLabel: 'Perfil',
-          tabBarIcon: ({ color }) => (
-            <Text style={{ color, fontSize: 16, fontWeight: 'bold' }}>👤</Text>
+          tabBarIcon: ({ color, focused }) => (
+            <View
+              style={[
+                styles.iconContainer,
+                focused && styles.iconContainerActive,
+              ]}
+            >
+              <Icon name="account" size={24} color={color} />
+            </View>
           ),
         }}
       />
     </Tab.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  iconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 40,
+    height: 40,
+  },
+  iconContainerActive: {
+    backgroundColor: 'rgba(0, 217, 186, 0.1)',
+    borderRadius: 12,
+  },
+});
 
 export function RootNavigator() {
   const user = useAuthStore(state => state.user);

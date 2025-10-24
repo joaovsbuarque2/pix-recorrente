@@ -5,8 +5,13 @@ export interface Client {
   name: string;
   email?: string;
   phone: string;
+  cpf?: string;
+  cnpj?: string;
+  address?: string;
+  notes?: string;
   status: 'active' | 'inactive';
   totalPaid: number;
+  totalCharges: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -18,12 +23,24 @@ export class ClientsService {
         .clients(userId)
         .orderBy('createdAt', 'desc')
         .get();
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt.toDate(),
-        updatedAt: doc.data().updatedAt.toDate(),
-      })) as Client[];
+
+      const { chargesService } = await import('./chargesService');
+      const charges = await chargesService.getCharges(userId);
+
+      return snapshot.docs.map(doc => {
+        const clientData = doc.data();
+        const clientCharges = charges.filter(
+          charge => charge.clientId === doc.id && charge.status !== 'paid',
+        );
+
+        return {
+          id: doc.id,
+          ...clientData,
+          totalCharges: clientCharges.length,
+          createdAt: clientData.createdAt.toDate(),
+          updatedAt: clientData.updatedAt.toDate(),
+        } as Client;
+      });
     } catch (error) {
       console.error('Error getting clients:', error);
       throw error;

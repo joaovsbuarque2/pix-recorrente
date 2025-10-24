@@ -1,5 +1,5 @@
 /* eslint-disable react/react-in-jsx-scope */
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import auth from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,14 +9,16 @@ import { Provider as PaperProvider } from 'react-native-paper';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { useAuthStore } from './src/store/authStore';
 import { useThemeStore } from './src/store/themeStore';
+import CompleteProfileModal from './src/components/CompleteProfileModal';
 
 GoogleSignin.configure({
   offlineAccess: false,
 });
 
 function App(): JSX.Element {
-  const setUser = useAuthStore(state => state.setUser);
+  const { user, setUser } = useAuthStore();
   const { theme } = useThemeStore();
+  const [showCompleteProfile, setShowCompleteProfile] = useState(false);
 
   useEffect(() => {
     const loadUserFromStorage = async () => {
@@ -42,6 +44,7 @@ function App(): JSX.Element {
           uid: user.uid,
           email: user.email,
           displayName: user.displayName,
+          profileComplete: false,
         };
         AsyncStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
@@ -54,6 +57,12 @@ function App(): JSX.Element {
     return unsubscribe;
   }, [setUser]);
 
+  useEffect(() => {
+    if (user && user.profileComplete === false) {
+      setShowCompleteProfile(true);
+    }
+  }, [user]);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PaperProvider theme={theme}>
@@ -62,6 +71,10 @@ function App(): JSX.Element {
           backgroundColor={theme.colors.background}
         />
         <RootNavigator />
+        <CompleteProfileModal
+          visible={showCompleteProfile}
+          onComplete={() => setShowCompleteProfile(false)}
+        />
       </PaperProvider>
     </GestureHandlerRootView>
   );

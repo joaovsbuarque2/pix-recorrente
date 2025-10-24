@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -9,15 +9,15 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
-import { useTheme } from 'react-native-paper';
 import { colors, spacing, typography, borderRadius } from '../constants/theme';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
+import EditProfileModal from '../components/EditProfileModal';
 
 export default function ProfileScreen() {
-  const theme = useTheme();
   const { user, signOut } = useAuthStore();
   const { mode, toggleTheme } = useThemeStore();
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const handleSignOut = async () => {
     Alert.alert('Sair', 'Tem certeza que deseja sair?', [
@@ -88,12 +88,15 @@ export default function ProfileScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Ações</Text>
 
-        <TouchableOpacity style={styles.actionCard}>
-          <Icon name="cog" size={24} color={colors.primary} />
+        <TouchableOpacity
+          style={styles.actionCard}
+          onPress={() => setShowEditModal(true)}
+        >
+          <Icon name="account-edit" size={24} color={colors.primary} />
           <View style={styles.actionContent}>
-            <Text style={styles.actionTitle}>Configurações</Text>
+            <Text style={styles.actionTitle}>Editar Perfil</Text>
             <Text style={styles.actionSubtitle}>
-              Personalize sua experiência
+              Alterar dados pessoais e bancários
             </Text>
           </View>
           <Icon name="chevron-right" size={24} color={colors.textSecondary} />
@@ -141,6 +144,12 @@ export default function ProfileScreen() {
           <Text style={styles.signOutText}>Sair da Conta</Text>
         </TouchableOpacity>
       </View>
+
+      <EditProfileModal
+        visible={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onProfileUpdated={() => {}}
+      />
     </ScrollView>
   );
 }

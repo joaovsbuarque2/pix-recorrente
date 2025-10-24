@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,55 +10,77 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAuthStore } from '../store/authStore';
-import { clientsService } from '../services/clientsService';
+import { usersService, UserProfile } from '../services/usersService';
 import { colors, spacing, typography, borderRadius } from '../constants/theme';
 import {
   validatePhone,
   validateCPF,
   validateCNPJ,
-  validateEmail,
+  validatePixKey,
   formatPhone,
   formatCPF,
   formatCNPJ,
 } from '../utils/validators';
 
-interface AddClientModalProps {
+interface EditProfileModalProps {
   visible: boolean;
   onClose: () => void;
-  onClientAdded: () => void;
+  onProfileUpdated: () => void;
 }
 
-export default function AddClientModal({
+export default function EditProfileModal({
   visible,
   onClose,
-  onClientAdded,
-}: AddClientModalProps) {
-  const { user } = useAuthStore();
+  onProfileUpdated,
+}: EditProfileModalProps) {
+  const { user, updateUserProfile } = useAuthStore();
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [displayName, setDisplayName] = useState('');
   const [phone, setPhone] = useState('');
   const [cpf, setCpf] = useState('');
   const [cnpj, setCnpj] = useState('');
-  const [address, setAddress] = useState('');
-  const [notes, setNotes] = useState('');
+  const [pixKey, setPixKey] = useState('');
+  const [bankName, setBankName] = useState('');
+  const [agencia, setAgencia] = useState('');
+  const [conta, setConta] = useState('');
 
-  const resetForm = () => {
-    setName('');
-    setEmail('');
-    setPhone('');
-    setCpf('');
-    setCnpj('');
-    setAddress('');
-    setNotes('');
+  useEffect(() => {
+    if (visible && user?.uid) {
+      loadProfile();
+    }
+  }, [visible, user?.uid]);
+
+  const loadProfile = async () => {
+    if (!user?.uid) return;
+    try {
+      setLoading(true);
+      const profile = await usersService.getUserProfile(user.uid);
+      if (profile) {
+        setDisplayName(profile.displayName);
+        setPhone(formatPhone(profile.phone || ''));
+        setCpf(profile.cpf ? formatCPF(profile.cpf) : '');
+        setCnpj(profile.cnpj ? formatCNPJ(profile.cnpj) : '');
+        setPixKey(profile.pixKey || '');
+        setBankName(profile.bankData?.bankName || '');
+        setAgencia(profile.bankData?.agencia || '');
+        setConta(profile.bankData?.conta || '');
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      Alert.alert('Erro', 'Falha ao carregar perfil');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSave = async () => {
-    if (!name.trim()) {
-      Alert.alert('Erro', 'Nome do cliente é obrigatório');
+    if (!displayName.trim()) {
+      Alert.alert('Erro', 'Nome completo é obrigatório');
       return;
     }
 
@@ -72,8 +94,13 @@ export default function AddClientModal({
       return;
     }
 
-    if (email.trim() && !validateEmail(email)) {
-      Alert.alert('Erro', 'Email inválido');
+    if (!pixKey.trim()) {
+      Alert.alert('Erro', 'Chave PIX é obrigatória');
+      return;
+    }
+
+    if (!validatePixKey(pixKey)) {
+      Alert.alert('Erro', 'Chave PIX inválida');
       return;
     }
 
@@ -88,29 +115,39 @@ export default function AddClientModal({
     }
 
     try {
-      const clientData: any = {
-        name: name.trim(),
+      const updateData: any = {
+        displayName: displayName.trim(),
         phone: phone.replace(/\D/g, ''),
-        status: 'active',
-        totalPaid: 0,
-        totalCharges: 0,
+        pixKey: pixKey.trim(),
       };
 
-      if (email.trim()) clientData.email = email.trim();
-      if (cpf.trim()) clientData.cpf = cpf.replace(/\D/g, '');
-      if (cnpj.trim()) clientData.cnpj = cnpj.replace(/\D/g, '');
-      if (address.trim()) clientData.address = address.trim();
-      if (notes.trim()) clientData.notes = notes.trim();
+      if (cpf.trim()) {
+        updateData.cpf = cpf.replace(/\D/g, '');
+      }
 
-      await clientsService.addClient(user!.uid, clientData);
+      if (cnpj.trim()) {
+        updateData.cnpj = cnpj.replace(/\D/g, '');
+      }
 
-      Alert.alert('Sucesso', 'Cliente adicionado com sucesso!');
-      resetForm();
-      onClientAdded();
+      if (bankName.trim() || agencia.trim() || conta.trim()) {
+        updateData.bankData = {};
+        if (bankName.trim()) updateData.bankData.bankName = bankName.trim();
+        if (agencia.trim()) updateData.bankData.agencia = agencia.trim();
+        if (conta.trim()) updateData.bankData.conta = conta.trim();
+      }
+
+      await usersService.updateUserProfile(user!.uid, updateData);
+
+      updateUserProfile({
+        displayName: displayName.trim(),
+      });
+
+      Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
+      onProfileUpdated();
       onClose();
     } catch (error) {
-      console.error('Error adding client:', error);
-      Alert.alert('Erro', 'Falha ao adicionar cliente');
+      console.error('Error updating profile:', error);
+      Alert.alert('Erro', 'Falha ao atualizar perfil');
     }
   };
 
@@ -149,26 +186,26 @@ export default function AddClientModal({
       >
         <View style={styles.modalContent}>
           <View style={styles.header}>
-            <Text style={styles.title}>Novo Cliente</Text>
+            <Text style={styles.title}>Editar Perfil</Text>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
               <Icon name="close" size={20} color={colors.text} />
             </TouchableOpacity>
           </View>
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            style={styles.scrollContent}
-          >
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Dados Principais</Text>
-
+          {loading ? (
+            <ActivityIndicator size="large" color={colors.primary} />
+          ) : (
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              style={styles.scrollContent}
+            >
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Nome Completo *</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Digite o nome do cliente"
-                  value={name}
-                  onChangeText={setName}
+                  placeholder="Digite seu nome completo"
+                  value={displayName}
+                  onChangeText={setDisplayName}
                   placeholderTextColor={colors.textSecondary}
                 />
               </View>
@@ -187,20 +224,18 @@ export default function AddClientModal({
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Email</Text>
+                <Text style={styles.label}>Chave PIX *</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="email@exemplo.com"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
+                  placeholder="Email, telefone, CPF ou chave aleatória"
+                  value={pixKey}
+                  onChangeText={setPixKey}
                   placeholderTextColor={colors.textSecondary}
+                  autoCapitalize="none"
                 />
               </View>
-            </View>
 
-            <View style={styles.section}>
+              <View style={styles.separator} />
               <Text style={styles.sectionTitle}>Documentos</Text>
 
               <View style={styles.inputGroup}>
@@ -228,36 +263,45 @@ export default function AddClientModal({
                   maxLength={18}
                 />
               </View>
-            </View>
 
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Informações Adicionais</Text>
+              <View style={styles.separator} />
+              <Text style={styles.sectionTitle}>Dados Bancários</Text>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Endereço</Text>
+                <Text style={styles.label}>Nome do Banco</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Rua, número, bairro, cidade"
-                  value={address}
-                  onChangeText={setAddress}
+                  placeholder="Ex: Banco do Brasil"
+                  value={bankName}
+                  onChangeText={setBankName}
                   placeholderTextColor={colors.textSecondary}
                 />
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Observações</Text>
+                <Text style={styles.label}>Agência</Text>
                 <TextInput
-                  style={[styles.input, styles.textArea]}
-                  placeholder="Anotações sobre o cliente..."
-                  value={notes}
-                  onChangeText={setNotes}
+                  style={styles.input}
+                  placeholder="0000"
+                  value={agencia}
+                  onChangeText={setAgencia}
+                  keyboardType="numeric"
                   placeholderTextColor={colors.textSecondary}
-                  multiline
-                  numberOfLines={3}
                 />
               </View>
-            </View>
-          </ScrollView>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Conta</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="00000-0"
+                  value={conta}
+                  onChangeText={setConta}
+                  placeholderTextColor={colors.textSecondary}
+                />
+              </View>
+            </ScrollView>
+          )}
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity
@@ -272,7 +316,7 @@ export default function AddClientModal({
               style={[styles.button, styles.saveButton]}
               onPress={handleSave}
             >
-              <Text style={styles.buttonText}>Salvar Cliente</Text>
+              <Text style={styles.buttonText}>Salvar</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -323,16 +367,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     maxHeight: 500,
   },
-  section: {
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: spacing.md,
-    fontFamily: 'Inter-SemiBold',
-  },
   inputGroup: {
     marginBottom: spacing.md,
   },
@@ -353,9 +387,17 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     fontFamily: 'Inter-Regular',
   },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
+  separator: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: spacing.lg,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: spacing.md,
+    fontFamily: 'Inter-SemiBold',
   },
   buttonContainer: {
     flexDirection: 'row',

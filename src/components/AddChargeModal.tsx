@@ -8,15 +8,19 @@ import {
   Modal,
   Alert,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Linking,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import QRCode from 'react-native-qrcode-svg';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { addMonths, parse, format } from 'date-fns';
 import { useTheme } from 'react-native-paper';
 import { useAuthStore } from '../store/authStore';
 import { chargesService, Charge } from '../services/chargesService';
 import { clientsService, Client } from '../services/clientsService';
-import { spacing, typography, borderRadius } from '../constants/theme';
+import { colors, spacing, typography, borderRadius } from '../constants/theme';
 
 interface AddChargeModalProps {
   visible: boolean;
@@ -182,41 +186,64 @@ export default function AddChargeModal({
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      padding: spacing.lg,
     },
     modalContent: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: borderRadius.lg,
+      backgroundColor: colors.surface,
+      borderRadius: borderRadius.xl,
       padding: spacing.xl,
-      width: '90%',
-      maxHeight: '80%',
+      width: '100%',
+      maxHeight: '85%',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.3,
+      shadowRadius: 16,
+      elevation: 12,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing.lg,
     },
     title: {
       ...typography.h2,
-      color: theme.colors.onSurface,
-      marginBottom: spacing.lg,
-      textAlign: 'center',
+      color: colors.text,
+      fontFamily: 'Inter-Bold',
+    },
+    closeButton: {
+      width: 32,
+      height: 32,
+      borderRadius: borderRadius.full,
+      backgroundColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    scrollContent: {
+      paddingBottom: spacing.md,
     },
     input: {
-      backgroundColor: theme.colors.background,
+      backgroundColor: colors.backgroundDark,
       padding: spacing.md,
       borderRadius: borderRadius.md,
       marginBottom: spacing.md,
       fontSize: 16,
-      color: theme.colors.onSurface,
+      color: colors.text,
       borderWidth: 1,
-      borderColor: theme.colors.outline,
+      borderColor: colors.border,
+      fontFamily: 'Inter-Regular',
     },
     picker: {
-      backgroundColor: theme.colors.background,
+      backgroundColor: colors.backgroundDark,
       borderRadius: borderRadius.md,
       marginBottom: spacing.md,
       borderWidth: 1,
-      borderColor: theme.colors.outline,
+      borderColor: colors.border,
     },
     buttonContainer: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
+      gap: spacing.md,
       marginTop: spacing.lg,
     },
     button: {
@@ -224,31 +251,34 @@ export default function AddChargeModal({
       padding: spacing.md,
       borderRadius: borderRadius.md,
       alignItems: 'center',
-      marginHorizontal: spacing.sm,
     },
     saveButton: {
-      backgroundColor: theme.colors.primary,
+      backgroundColor: colors.primary,
     },
     cancelButton: {
-      backgroundColor: theme.colors.surfaceVariant,
+      backgroundColor: colors.border,
     },
     buttonText: {
-      color: theme.colors.onPrimary,
+      color: '#FFFFFF',
       fontSize: 16,
       fontWeight: '600',
+      fontFamily: 'Inter-SemiBold',
     },
     cancelText: {
-      color: theme.colors.onSurfaceVariant,
+      color: colors.text,
     },
     chargeDetail: {
       fontSize: 16,
-      color: theme.colors.onSurface,
+      color: colors.text,
       marginBottom: spacing.sm,
       fontFamily: 'Inter-Regular',
     },
     qrContainer: {
       alignItems: 'center',
       marginVertical: spacing.lg,
+      padding: spacing.lg,
+      backgroundColor: colors.backgroundDark,
+      borderRadius: borderRadius.md,
     },
   });
 
@@ -276,120 +306,139 @@ export default function AddChargeModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.modalContainer}>
-        <ScrollView contentContainerStyle={styles.modalContent}>
-          <Text style={styles.title}>
-            {savedCharge ? 'Cobrança Criada' : 'Adicionar Cobrança'}
-          </Text>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        style={styles.modalContainer}
+      >
+        <View style={styles.modalContent}>
+          <View style={styles.header}>
+            <Text style={styles.title}>
+              {savedCharge ? 'Cobrança Criada' : 'Adicionar Cobrança'}
+            </Text>
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <Icon name="close" size={20} color={colors.text} />
+            </TouchableOpacity>
+          </View>
 
-          {savedCharge ? (
-            <>
-              <Text style={styles.chargeDetail}>
-                Cliente: {savedCharge.clientName}
-              </Text>
-              <Text style={styles.chargeDetail}>
-                Valor: R$ {savedCharge.value.toFixed(2)}
-              </Text>
-              <Text style={styles.chargeDetail}>
-                Descrição: {savedCharge.description}
-              </Text>
-              <Text style={styles.chargeDetail}>
-                Vencimento: {savedCharge.dueDate}
-              </Text>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            style={styles.scrollContent}
+          >
+            {savedCharge ? (
+              <>
+                <Text style={styles.chargeDetail}>
+                  Cliente: {savedCharge.clientName}
+                </Text>
+                <Text style={styles.chargeDetail}>
+                  Valor: R$ {savedCharge.value.toFixed(2)}
+                </Text>
+                <Text style={styles.chargeDetail}>
+                  Descrição: {savedCharge.description}
+                </Text>
+                <Text style={styles.chargeDetail}>
+                  Vencimento: {savedCharge.dueDate}
+                </Text>
 
-              <View style={styles.qrContainer}>
-                <QRCode value={generatePixQrValue()} size={150} />
-              </View>
+                <View style={styles.qrContainer}>
+                  <QRCode value={generatePixQrValue()} size={150} />
+                </View>
 
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                  style={[styles.button, styles.cancelButton]}
-                  onPress={handleSendPix}
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity
+                    style={[styles.button, styles.cancelButton]}
+                    onPress={handleSendPix}
+                  >
+                    <Text style={[styles.buttonText, styles.cancelText]}>
+                      Enviar via WhatsApp
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.button, styles.saveButton]}
+                    onPress={onClose}
+                  >
+                    <Text style={styles.buttonText}>Fechar</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <>
+                <Picker
+                  selectedValue={selectedClientId}
+                  onValueChange={itemValue => setSelectedClientId(itemValue)}
+                  style={styles.picker}
                 >
-                  <Text style={[styles.buttonText, styles.cancelText]}>
-                    Enviar via WhatsApp
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.button, styles.saveButton]}
-                  onPress={onClose}
-                >
-                  <Text style={styles.buttonText}>Fechar</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          ) : (
-            <>
-              <Picker
-                selectedValue={selectedClientId}
-                onValueChange={itemValue => setSelectedClientId(itemValue)}
-                style={styles.picker}
-              >
-                <Picker.Item label="Selecione um cliente" value="" />
-                {clients.map(client => (
-                  <Picker.Item
-                    key={client.id}
-                    label={client.name}
-                    value={client.id}
-                  />
-                ))}
-              </Picker>
+                  <Picker.Item label="Selecione um cliente" value="" />
+                  {clients.map(client => (
+                    <Picker.Item
+                      key={client.id}
+                      label={client.name}
+                      value={client.id}
+                    />
+                  ))}
+                </Picker>
 
-              <TextInput
-                style={styles.input}
-                placeholder="Valor da Cobrança (R$)"
-                value={value}
-                onChangeText={setValue}
-                keyboardType="numeric"
-                placeholderTextColor={theme.colors.onSurfaceVariant}
-              />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Valor da Cobrança (R$)"
+                  value={value}
+                  onChangeText={setValue}
+                  keyboardType="numeric"
+                  placeholderTextColor={colors.textSecondary}
+                />
 
-              <TextInput
-                style={styles.input}
-                placeholder="Data de Vencimento (DD/MM/YYYY)"
-                value={dueDate}
-                onChangeText={setDueDate}
-                placeholderTextColor={theme.colors.onSurfaceVariant}
-              />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Data de Vencimento (DD/MM/YYYY)"
+                  value={dueDate}
+                  onChangeText={setDueDate}
+                  placeholderTextColor={colors.textSecondary}
+                />
 
-              <TextInput
-                style={styles.input}
-                placeholder="Descrição da Cobrança"
-                value={description}
-                onChangeText={setDescription}
-                placeholderTextColor={theme.colors.onSurfaceVariant}
-              />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Descrição da Cobrança"
+                  value={description}
+                  onChangeText={setDescription}
+                  placeholderTextColor={colors.textSecondary}
+                />
 
-              <TextInput
-                style={styles.input}
-                placeholder="Número de Parcelas (1-60)"
-                value={installments}
-                onChangeText={setInstallments}
-                keyboardType="numeric"
-                placeholderTextColor={theme.colors.onSurfaceVariant}
-              />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Número de Parcelas (1-60)"
+                  value={installments}
+                  onChangeText={setInstallments}
+                  keyboardType="numeric"
+                  placeholderTextColor={colors.textSecondary}
+                />
 
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                  style={[styles.button, styles.cancelButton]}
-                  onPress={onClose}
-                >
-                  <Text style={[styles.buttonText, styles.cancelText]}>
-                    Cancelar
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.button, styles.saveButton]}
-                  onPress={handleSave}
-                >
-                  <Text style={styles.buttonText}>Salvar</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          )}
-        </ScrollView>
-      </View>
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity
+                    style={[styles.button, styles.cancelButton]}
+                    onPress={onClose}
+                  >
+                    <Text style={[styles.buttonText, styles.cancelText]}>
+                      Cancelar
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.button, styles.saveButton]}
+                    onPress={handleSave}
+                  >
+                    <Text style={styles.buttonText}>Salvar</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

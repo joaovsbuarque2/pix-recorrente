@@ -1,32 +1,43 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
   ActivityIndicator,
   Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { colors, spacing, typography, borderRadius } from '../constants/theme';
-import { useAuthStore } from '../store/authStore';
-import { clientsService, Client } from '../services/clientsService';
 import AddClientModal from '../components/AddClientModal';
+import ClientDetailModal from '../components/ClientDetailModal';
+import EditClientModal from '../components/EditClientModal';
+import { borderRadius, colors, spacing, typography } from '../constants/theme';
+import { Client, clientsService } from '../services/clientsService';
+import { useAuthStore } from '../store/authStore';
 
 export default function ClientsScreen() {
   const { user } = useAuthStore();
   const [clients, setClients] = useState<Client[]>([]);
+  const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const loadClients = useCallback(async () => {
-    if (!user?.uid) return;
+    if (!user?.uid) {
+      return;
+    }
     try {
       setLoading(true);
       const fetchedClients = await clientsService.getClients(user.uid);
       setClients(fetchedClients);
+      setFilteredClients(fetchedClients);
     } catch (error: any) {
       console.error('Error loading clients:', error);
       if (error.code === 'permission-denied') {
@@ -44,6 +55,50 @@ export default function ClientsScreen() {
     loadClients();
   }, [loadClients]);
 
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredClients(clients);
+    } else {
+      const query = searchQuery.toLowerCase();
+      const filtered = clients.filter(
+        client =>
+          client.name.toLowerCase().includes(query) ||
+          client.email?.toLowerCase().includes(query) ||
+          client.phone.includes(query) ||
+          client.cpf?.includes(query) ||
+          client.cnpj?.includes(query),
+      );
+      setFilteredClients(filtered);
+    }
+  }, [searchQuery, clients]);
+
+  const handleDeleteClient = useCallback(
+    async (clientId: string, clientName: string) => {
+      Alert.alert(
+        'Excluir Cliente',
+        `Tem certeza que deseja excluir ${clientName}? Esta ação não pode ser desfeita.`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Excluir',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await clientsService.deleteClient(user!.uid, clientId);
+                await loadClients();
+                Alert.alert('Sucesso', 'Cliente excluído com sucesso');
+              } catch (error) {
+                console.error('Error deleting client:', error);
+                Alert.alert('Erro', 'Não foi possível excluir o cliente');
+              }
+            },
+          },
+        ],
+      );
+    },
+    [user, loadClients],
+  );
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -55,10 +110,10 @@ export default function ClientsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View>
+        <View style={styles.headerLeft}>
           <Text style={styles.title}>Clientes</Text>
           <Text style={styles.subtitle}>
-            {clients.length} clientes cadastrados
+            {filteredClients.length} de {clients.length} clientes
           </Text>
         </View>
         <TouchableOpacity
@@ -69,8 +124,24 @@ export default function ClientsScreen() {
         </TouchableOpacity>
       </View>
 
+      <View style={styles.searchContainer}>
+        <Icon name="magnify" size={20} color={colors.textSecondary} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Buscar por nome, email, telefone ou documento..."
+          placeholderTextColor={colors.textSecondary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Icon name="close-circle" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+        )}
+      </View>
+
       <ScrollView style={styles.list}>
-        {clients.length === 0 ? (
+        {filteredClients.length === 0 ? (
           <View style={styles.emptyState}>
             <Icon name="account-group" size={64} color={colors.textSecondary} />
             <Text style={styles.emptyText}>Nenhum cliente cadastrado</Text>
@@ -79,53 +150,87 @@ export default function ClientsScreen() {
             </Text>
           </View>
         ) : (
-          clients.map(client => (
-            <TouchableOpacity key={client.id} style={styles.clientCard}>
-              <View style={styles.clientIconContainer}>
-                <LinearGradient
-                  colors={['#8b5cf6', '#7c3aed']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.clientIcon}
-                >
-                  <Icon name="account" size={32} color="#fff" />
-                </LinearGradient>
-              </View>
-              <View style={styles.clientInfo}>
-                <Text style={styles.clientName}>{client.name}</Text>
-                <View style={styles.clientDetail}>
-                  <Icon
-                    name="email"
-                    size={14}
-                    color={colors.textSecondaryDark}
-                  />
-                  <Text style={styles.clientEmail}>{client.email}</Text>
+          filteredClients.map(client => (
+            <TouchableOpacity
+              key={client.id}
+              style={styles.clientCard}
+              onPress={() => {
+                setSelectedClient(client);
+                setDetailModalVisible(true);
+              }}
+            >
+              <View style={styles.clientCardContent}>
+                <View style={styles.clientIconContainer}>
+                  <LinearGradient
+                    colors={['#8b5cf6', '#7c3aed']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.clientIcon}
+                  >
+                    <Icon name="account" size={32} color="#fff" />
+                  </LinearGradient>
                 </View>
-                <View style={styles.clientDetail}>
-                  <Icon
-                    name="phone"
-                    size={14}
-                    color={colors.textSecondaryDark}
-                  />
-                  <Text style={styles.clientPhone}>{client.phone}</Text>
+                <View style={styles.clientInfo}>
+                  <Text style={styles.clientName}>{client.name}</Text>
+                  <View style={styles.clientDetail}>
+                    <Icon
+                      name="phone"
+                      size={14}
+                      color={colors.textSecondaryDark}
+                    />
+                    <Text style={styles.clientPhone}>{client.phone}</Text>
+                  </View>
                 </View>
-              </View>
-              <View style={styles.clientStats}>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    client.status === 'active'
-                      ? styles.statusActive
-                      : styles.statusInactive,
-                  ]}
-                >
-                  <Text style={styles.statusText}>
-                    {client.status === 'active' ? 'Ativo' : 'Inativo'}
+                <View style={styles.clientStats}>
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      client.status === 'active'
+                        ? styles.statusActive
+                        : styles.statusInactive,
+                    ]}
+                  >
+                    <Text style={styles.statusText}>
+                      {client.status === 'active' ? 'Ativo' : 'Inativo'}
+                    </Text>
+                  </View>
+                  <Text style={styles.clientCharges}>
+                    {client.totalCharges}{' '}
+                    {client.totalCharges === 1 ? 'cobrança' : 'cobranças'}
+                  </Text>
+                  <Text style={styles.clientTotal}>
+                    R$ {client.totalPaid.toFixed(2)}
                   </Text>
                 </View>
-                <Text style={styles.clientTotal}>
-                  R$ {client.totalPaid.toFixed(2)}
-                </Text>
+              </View>
+              <View style={styles.clientActions}>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => {
+                    setSelectedClient(client);
+                    setDetailModalVisible(true);
+                  }}
+                >
+                  <Icon name="cash-plus" size={20} color={colors.success} />
+                  <Text style={styles.actionText}>Cobrar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => {
+                    setSelectedClient(client);
+                    setEditModalVisible(true);
+                  }}
+                >
+                  <Icon name="pencil" size={20} color={colors.warning} />
+                  <Text style={styles.actionText}>Editar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => handleDeleteClient(client.id, client.name)}
+                >
+                  <Icon name="delete" size={20} color={colors.error} />
+                  <Text style={styles.actionText}>Excluir</Text>
+                </TouchableOpacity>
               </View>
             </TouchableOpacity>
           ))
@@ -136,6 +241,32 @@ export default function ClientsScreen() {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onClientAdded={loadClients}
+      />
+
+      <EditClientModal
+        visible={editModalVisible}
+        client={selectedClient}
+        onClose={() => {
+          setEditModalVisible(false);
+          setSelectedClient(null);
+        }}
+        onClientUpdated={loadClients}
+      />
+
+      <ClientDetailModal
+        visible={detailModalVisible}
+        client={selectedClient}
+        onClose={() => {
+          setDetailModalVisible(false);
+          setSelectedClient(null);
+        }}
+        onCreateCharge={client => {
+          setDetailModalVisible(false);
+          Alert.alert(
+            'Em desenvolvimento',
+            'Modal de criar cobrança será implementado em breve',
+          );
+        }}
       />
     </View>
   );
@@ -152,6 +283,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.xl,
     paddingTop: spacing.xxl,
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    marginHorizontal: spacing.xl,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: spacing.sm,
+    fontSize: 14,
+    color: colors.text,
+    fontFamily: 'Inter-Regular',
   },
   title: {
     ...typography.h1,
@@ -279,5 +432,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.xs,
     marginTop: 2,
+  },
+  clientCardContent: {
+    flexDirection: 'row',
+    padding: spacing.lg,
+    backgroundColor: colors.surfaceDark,
+    borderTopLeftRadius: borderRadius.lg,
+    borderTopRightRadius: borderRadius.lg,
+  },
+  clientDocument: {
+    fontSize: 14,
+    color: colors.textSecondaryDark,
+    fontFamily: 'Inter-Regular',
+  },
+  clientCharges: {
+    fontSize: 12,
+    color: colors.textSecondaryDark,
+    marginBottom: spacing.xs,
+    fontFamily: 'Inter-Regular',
+  },
+  clientActions: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    backgroundColor: colors.surfaceDark,
+    borderBottomLeftRadius: borderRadius.lg,
+    borderBottomRightRadius: borderRadius.lg,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    gap: spacing.xs,
+  },
+  actionText: {
+    fontSize: 12,
+    color: colors.textSecondaryDark,
+    fontFamily: 'Inter-Medium',
   },
 });

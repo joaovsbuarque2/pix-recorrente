@@ -1,19 +1,20 @@
 export const colors = {
-  primary: '#00D09E',
-  secondary: '#00664eff',
+  primary: '#00D9BA',
+  secondary: '#1E3A8A',
+  accent: '#60A5FA',
   background: '#FFFFFF',
-  backgroundDark: '#0F0F0F',
-  surface: '#F5F5F5',
-  surfaceDark: '#1A1A1A',
-  text: '#000000',
-  textDark: '#FFFFFF',
-  textSecondary: '#666666',
-  textSecondaryDark: '#B0B0B0',
-  error: '#E63946',
-  success: '#06D6A0',
-  warning: '#FFB703',
-  border: '#E0E0E0',
-  borderDark: '#2A2A2A',
+  backgroundDark: '#F8FAFB',
+  surface: '#FFFFFF',
+  surfaceDark: '#FFFFFF',
+  text: '#1E293B',
+  textDark: '#1E293B',
+  textSecondary: '#64748B',
+  textSecondaryDark: '#64748B',
+  error: '#EF4444',
+  success: '#10B981',
+  warning: '#F59E0B',
+  border: '#E2E8F0',
+  borderDark: '#CBD5E1',
 };
 
 export const spacing = {
@@ -67,7 +68,7 @@ export const typography = {
 };
 
 export const paperTheme = {
-  dark: true,
+  dark: false,
   colors: {
     primary: colors.primary,
     background: colors.backgroundDark,
