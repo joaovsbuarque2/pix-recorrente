@@ -8,7 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { useAuthStore } from './src/store/authStore';
-import { paperTheme } from './src/constants/theme';
+import { useThemeStore } from './src/store/themeStore';
 
 // Temporarily disabled Google Signin configuration
 // GoogleSignin.configure({
@@ -19,6 +19,7 @@ import { paperTheme } from './src/constants/theme';
 
 function App(): JSX.Element {
   const setUser = useAuthStore(state => state.setUser);
+  const { theme } = useThemeStore();
 
   useEffect(() => {
     const loadUserFromStorage = async () => {
@@ -58,10 +59,10 @@ function App(): JSX.Element {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <PaperProvider theme={paperTheme}>
+      <PaperProvider theme={theme}>
         <StatusBar
-          barStyle="light-content"
-          backgroundColor={paperTheme.colors.background}
+          barStyle={theme.dark ? 'light-content' : 'dark-content'}
+          backgroundColor={theme.colors.background}
         />
         <RootNavigator />
       </PaperProvider>

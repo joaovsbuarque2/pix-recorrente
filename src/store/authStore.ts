@@ -34,6 +34,8 @@ export const useAuthStore = create<AuthState>(set => ({
       displayName: userCredential.user.displayName,
     };
     await AsyncStorage.setItem('user', JSON.stringify(user));
+    await AsyncStorage.setItem('email', email);
+    await AsyncStorage.setItem('password', password);
     set({ user });
   },
 
@@ -48,6 +50,8 @@ export const useAuthStore = create<AuthState>(set => ({
       displayName: userCredential.user.displayName,
     };
     await AsyncStorage.setItem('user', JSON.stringify(user));
+    await AsyncStorage.setItem('email', email);
+    await AsyncStorage.setItem('password', password);
     set({ user });
   },
 
@@ -75,6 +79,8 @@ export const useAuthStore = create<AuthState>(set => ({
     await auth().signOut();
     // await GoogleSignin.signOut();
     await AsyncStorage.removeItem('user');
+    await AsyncStorage.removeItem('email');
+    await AsyncStorage.removeItem('password');
     set({ user: null });
   },
 

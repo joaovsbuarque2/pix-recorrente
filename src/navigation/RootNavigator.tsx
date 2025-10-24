@@ -1,8 +1,9 @@
 import React from 'react';
+import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+// import Icon from 'react-native-vector-icons/Ionicons';
 import { colors } from '../constants/theme';
 import { useAuthStore } from '../store/authStore';
 
@@ -36,8 +37,8 @@ function MainTabs() {
         component={DashboardScreen}
         options={{
           tabBarLabel: 'Dashboard',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="view-dashboard" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <Text style={{ color, fontSize: 16, fontWeight: 'bold' }}>📊</Text>
           ),
         }}
       />
@@ -46,8 +47,8 @@ function MainTabs() {
         component={ClientsScreen}
         options={{
           tabBarLabel: 'Clientes',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="account-group" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <Text style={{ color, fontSize: 16, fontWeight: 'bold' }}>👥</Text>
           ),
         }}
       />
@@ -56,8 +57,8 @@ function MainTabs() {
         component={ChargesScreen}
         options={{
           tabBarLabel: 'Cobranças',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="cash-multiple" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <Text style={{ color, fontSize: 16, fontWeight: 'bold' }}>💳</Text>
           ),
         }}
       />
@@ -66,8 +67,8 @@ function MainTabs() {
         component={ProfileScreen}
         options={{
           tabBarLabel: 'Perfil',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="account" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <Text style={{ color, fontSize: 16, fontWeight: 'bold' }}>👤</Text>
           ),
         }}
       />

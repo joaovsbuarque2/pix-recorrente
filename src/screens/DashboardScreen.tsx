@@ -1,10 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
-import { LineChart, PieChart, BarChart } from 'react-native-chart-kit';
-import { colors, spacing, typography, borderRadius } from '../constants/theme';
-
-const { width } = Dimensions.get('window');
-const chartWidth = width - spacing.lg * 2;
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import { borderRadius, colors, spacing, typography } from '../constants/theme';
 
 // Mock data for charts
 const revenueData = {
@@ -49,23 +46,6 @@ const monthlyRevenueData = {
   ],
 };
 
-const chartConfig = {
-  backgroundColor: colors.backgroundDark,
-  backgroundGradientFrom: colors.backgroundDark,
-  backgroundGradientTo: colors.backgroundDark,
-  decimalPlaces: 0,
-  color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
-  labelColor: (opacity = 1) => `rgba(156, 163, 175, ${opacity})`,
-  style: {
-    borderRadius: 16,
-  },
-  propsForDots: {
-    r: '6',
-    strokeWidth: '2',
-    stroke: '#3b82f6',
-  },
-};
-
 export default function DashboardScreen() {
   return (
     <ScrollView style={styles.container}>
@@ -75,85 +55,121 @@ export default function DashboardScreen() {
       </View>
 
       <View style={styles.cardsRow}>
-        <View style={[styles.card, styles.cardGreen]}>
+        <LinearGradient
+          colors={['#10b981', '#059669']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.card, styles.cardGradient]}
+        >
           <Text style={styles.cardLabel}>Receita Semanal</Text>
           <Text style={styles.cardValue}>R$ 1.490,00</Text>
           <Text style={styles.cardChange}>+12% vs semana anterior</Text>
-        </View>
+        </LinearGradient>
 
-        <View style={[styles.card, styles.cardBlue]}>
+        <LinearGradient
+          colors={['#3b82f6', '#2563eb']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.card, styles.cardGradient]}
+        >
           <Text style={styles.cardLabel}>Receita Mensal</Text>
           <Text style={styles.cardValue}>R$ 6.240,00</Text>
           <Text style={styles.cardChange}>+8% vs mês anterior</Text>
-        </View>
+        </LinearGradient>
       </View>
 
       {/* Revenue Chart */}
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Receita dos Últimos 7 Dias</Text>
-        <LineChart
-          data={revenueData}
-          width={chartWidth}
-          height={220}
-          chartConfig={chartConfig}
-          bezier
-          style={styles.chart}
-        />
+        <View style={styles.simpleChart}>
+          {revenueData.datasets[0].data.map((value, index) => (
+            <View key={index} style={styles.chartBar}>
+              <View
+                style={[
+                  styles.chartBarFill,
+                  { height: (value / 300) * 150 }, // Scale to max 150 height
+                ]}
+              />
+              <Text style={styles.chartLabel}>{revenueData.labels[index]}</Text>
+              <Text style={styles.chartValue}>R$ {value}</Text>
+            </View>
+          ))}
+        </View>
       </View>
 
       <View style={styles.statsGrid}>
-        <View style={[styles.statCard, styles.statCardPurple]}>
+        <LinearGradient
+          colors={['#8b5cf6', '#7c3aed']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.statCard, styles.statCardGradient]}
+        >
           <Text style={styles.statNumber}>24</Text>
           <Text style={styles.statLabel}>Clientes Ativos</Text>
-        </View>
+        </LinearGradient>
 
-        <View style={[styles.statCard, styles.statCardYellow]}>
+        <LinearGradient
+          colors={['#f59e0b', '#d97706']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.statCard, styles.statCardGradient]}
+        >
           <Text style={styles.statNumber}>8</Text>
           <Text style={styles.statLabel}>Cobranças Pendentes</Text>
-        </View>
+        </LinearGradient>
 
-        <View style={[styles.statCard, styles.statCardGreen]}>
+        <LinearGradient
+          colors={['#10b981', '#059669']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.statCard, styles.statCardGradient]}
+        >
           <Text style={styles.statNumber}>16</Text>
           <Text style={styles.statLabel}>Cobranças Pagas</Text>
-        </View>
+        </LinearGradient>
 
-        <View style={[styles.statCard, styles.statCardPink]}>
+        <LinearGradient
+          colors={['#ec4899', '#db2777']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.statCard, styles.statCardGradient]}
+        >
           <Text style={styles.statNumber}>R$ 12.450</Text>
           <Text style={styles.statLabel}>Total Recebido</Text>
-        </View>
+        </LinearGradient>
       </View>
 
       {/* Charges Status Pie Chart */}
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Status das Cobranças</Text>
-        <PieChart
-          data={chargesStatusData}
-          width={chartWidth}
-          height={220}
-          chartConfig={chartConfig}
-          accessor="value"
-          backgroundColor="transparent"
-          paddingLeft="15"
-          absolute
-        />
+        <View style={styles.pieChart}>
+          {chargesStatusData.map((item, index) => (
+            <View key={index} style={styles.pieItem}>
+              <View
+                style={[styles.pieColor, { backgroundColor: item.color }]}
+              />
+              <Text style={styles.pieLabel}>
+                {item.name}: {item.value}
+              </Text>
+            </View>
+          ))}
+        </View>
       </View>
 
       {/* Monthly Revenue Bar Chart */}
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Receita Mensal (Últimos 6 Meses)</Text>
-        <BarChart
-          data={monthlyRevenueData}
-          width={chartWidth}
-          height={220}
-          yAxisLabel="R$ "
-          yAxisSuffix=""
-          chartConfig={{
-            ...chartConfig,
-            color: (opacity = 1) => `rgba(16, 185, 129, ${opacity})`,
-          }}
-          style={styles.chart}
-          showValuesOnTopOfBars
-        />
+        <View style={styles.simpleChart}>
+          {monthlyRevenueData.datasets[0].data.map((value, index) => (
+            <View key={index} style={styles.chartBar}>
+              <View style={[styles.chartBarFill, styles.chartBarFillGreen]} />
+              <Text style={styles.chartLabel}>
+                {monthlyRevenueData.labels[index]}
+              </Text>
+              <Text style={styles.chartValue}>R$ {value}</Text>
+            </View>
+          ))}
+        </View>
       </View>
     </ScrollView>
   );
@@ -192,6 +208,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 6,
+  },
+  cardGradient: {
+    borderRadius: borderRadius.lg,
   },
   cardLabel: {
     fontSize: 12,
@@ -232,6 +251,9 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
   },
+  statCardGradient: {
+    borderRadius: borderRadius.lg,
+  },
   statNumber: {
     fontSize: 28,
     fontWeight: '700',
@@ -246,24 +268,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: 'Inter-Medium',
   },
-  cardGreen: {
-    backgroundColor: '#10b981',
-  },
-  cardBlue: {
-    backgroundColor: '#3b82f6',
-  },
-  statCardPurple: {
-    backgroundColor: '#8b5cf6',
-  },
-  statCardYellow: {
-    backgroundColor: '#f59e0b',
-  },
-  statCardGreen: {
-    backgroundColor: '#10b981',
-  },
-  statCardPink: {
-    backgroundColor: '#ec4899',
-  },
+
   chartContainer: {
     marginHorizontal: spacing.lg,
     marginBottom: spacing.xl,
@@ -285,5 +290,56 @@ const styles = StyleSheet.create({
   chart: {
     borderRadius: borderRadius.lg,
     marginVertical: spacing.md,
+  },
+  simpleChart: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-end',
+    height: 200,
+    paddingVertical: spacing.lg,
+  },
+  chartBar: {
+    alignItems: 'center',
+    width: 35,
+  },
+  chartBarFill: {
+    width: 25,
+    backgroundColor: '#3b82f6',
+    borderRadius: borderRadius.sm,
+    marginBottom: spacing.sm,
+  },
+  chartBarFillGreen: {
+    height: (6200 / 7000) * 150, // Scale based on max value
+    backgroundColor: '#10b981',
+  },
+  chartLabel: {
+    fontSize: 12,
+    color: colors.textSecondaryDark,
+    fontFamily: 'Inter-Medium',
+  },
+  chartValue: {
+    fontSize: 10,
+    color: colors.textDark,
+    fontFamily: 'Inter-Regular',
+    marginTop: 2,
+  },
+  pieChart: {
+    padding: spacing.lg,
+  },
+  pieItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  pieColor: {
+    width: 16,
+    height: 16,
+    borderRadius: borderRadius.full,
+    marginRight: spacing.md,
+  },
+  pieLabel: {
+    fontSize: 14,
+    color: colors.textDark,
+    fontFamily: 'Inter-Medium',
   },
 });

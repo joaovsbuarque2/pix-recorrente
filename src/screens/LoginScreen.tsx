@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthStore } from '../store/authStore';
 import { colors, spacing, typography, borderRadius } from '../constants/theme';
 
@@ -15,6 +16,20 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const { signIn, signUp } = useAuthStore();
+
+  useEffect(() => {
+    const loadCredentials = async () => {
+      try {
+        const savedEmail = await AsyncStorage.getItem('email');
+        const savedPassword = await AsyncStorage.getItem('password');
+        if (savedEmail) setEmail(savedEmail);
+        if (savedPassword) setPassword(savedPassword);
+      } catch (error) {
+        console.error('Error loading credentials:', error);
+      }
+    };
+    loadCredentials();
+  }, []);
 
   const handleAuth = async () => {
     try {
@@ -27,14 +42,6 @@ export default function LoginScreen() {
       Alert.alert('Erro', error.message);
     }
   };
-
-  // const handleGoogleSignIn = async () => {
-  //   try {
-  //     await signInWithGoogle();
-  //   } catch (error: any) {
-  //     Alert.alert('Erro', error.message);
-  //   }
-  // };
 
   return (
     <View style={styles.container}>
@@ -77,13 +84,6 @@ export default function LoginScreen() {
         <Text style={styles.dividerText}>OU</Text>
         <View style={styles.dividerLine} />
       </View>
-
-      {/* <TouchableOpacity
-         style={styles.googleButton}
-         onPress={handleGoogleSignIn}
-       >
-         <Text style={styles.googleButtonText}>Entrar com Google</Text>
-       </TouchableOpacity> */}
     </View>
   );
 }
@@ -157,24 +157,5 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     paddingHorizontal: spacing.md,
     fontSize: 14,
-  },
-  googleButton: {
-    backgroundColor: colors.surfaceDark,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.textSecondaryDark,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  googleButtonText: {
-    color: colors.textDark,
-    fontSize: 16,
-    fontWeight: '600',
-    fontFamily: 'Inter-SemiBold',
   },
 });

@@ -1,58 +1,56 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors, spacing, typography, borderRadius } from '../constants/theme';
-
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  status: 'active' | 'inactive';
-  totalPaid: number;
-}
+import { useAuthStore } from '../store/authStore';
+import { clientsService, Client } from '../services/clientsService';
+import AddClientModal from '../components/AddClientModal';
 
 export default function ClientsScreen() {
-  const clients: Client[] = [
-    {
-      id: '1',
-      name: 'João Silva',
-      email: 'joao@email.com',
-      phone: '(11) 99999-9999',
-      status: 'active',
-      totalPaid: 450,
-    },
-    {
-      id: '2',
-      name: 'Maria Santos',
-      email: 'maria@email.com',
-      phone: '(11) 98888-8888',
-      status: 'active',
-      totalPaid: 890,
-    },
-    {
-      id: '3',
-      name: 'Pedro Costa',
-      email: 'pedro@email.com',
-      phone: '(11) 97777-7777',
-      status: 'inactive',
-      totalPaid: 200,
-    },
-    {
-      id: '4',
-      name: 'Ana Oliveira',
-      email: 'ana@email.com',
-      phone: '(11) 96666-6666',
-      status: 'active',
-      totalPaid: 1200,
-    },
-  ];
+  const { user } = useAuthStore();
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const loadClients = useCallback(async () => {
+    if (!user?.uid) return;
+    try {
+      setLoading(true);
+      const fetchedClients = await clientsService.getClients(user.uid);
+      setClients(fetchedClients);
+    } catch (error: any) {
+      console.error('Error loading clients:', error);
+      if (error.code === 'permission-denied') {
+        Alert.alert(
+          'Permissões do Firestore',
+          'As regras de segurança do Firestore não estão configuradas. Execute "firebase deploy --only firestore:rules" no terminal do projeto para permitir acesso aos dados.',
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.uid]);
+
+  useEffect(() => {
+    loadClients();
+  }, [loadClients]);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -63,7 +61,10 @@ export default function ClientsScreen() {
             {clients.length} clientes cadastrados
           </Text>
         </View>
-        <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => setModalVisible(true)}
+        >
           <Icon name="plus" size={24} color="#ffffff" />
         </TouchableOpacity>
       </View>
@@ -71,7 +72,12 @@ export default function ClientsScreen() {
       <ScrollView style={styles.list}>
         {clients.map(client => (
           <TouchableOpacity key={client.id} style={styles.clientCard}>
-            <View style={styles.cardGradient}>
+            <LinearGradient
+              colors={['rgba(138, 5, 190, 0.08)', 'rgba(0, 208, 158, 0.08)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.cardGradient}
+            >
               <View style={styles.clientInfo}>
                 <Text style={styles.clientName}>{client.name}</Text>
                 <Text style={styles.clientEmail}>{client.email}</Text>
@@ -94,10 +100,16 @@ export default function ClientsScreen() {
                   R$ {client.totalPaid.toFixed(2)}
                 </Text>
               </View>
-            </View>
+            </LinearGradient>
           </TouchableOpacity>
         ))}
       </ScrollView>
+
+      <AddClientModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onClientAdded={loadClients}
+      />
     </View>
   );
 }

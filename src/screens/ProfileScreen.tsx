@@ -8,11 +8,15 @@ import {
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from 'react-native-paper';
 import { colors, spacing, typography, borderRadius } from '../constants/theme';
 import { useAuthStore } from '../store/authStore';
+import { useThemeStore } from '../store/themeStore';
 
 export default function ProfileScreen() {
+  const theme = useTheme();
   const { user, signOut } = useAuthStore();
+  const { mode, toggleTheme } = useThemeStore();
 
   const handleSignOut = async () => {
     Alert.alert('Sair', 'Tem certeza que deseja sair?', [
@@ -105,6 +109,21 @@ export default function ProfileScreen() {
           <View style={styles.actionContent}>
             <Text style={styles.actionTitle}>Sobre</Text>
             <Text style={styles.actionSubtitle}>Versão do aplicativo</Text>
+          </View>
+          <Icon name="chevron-right" size={24} color={colors.textSecondary} />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.actionCard} onPress={toggleTheme}>
+          <Icon
+            name={mode === 'dark' ? 'weather-sunny' : 'weather-night'}
+            size={24}
+            color={colors.primary}
+          />
+          <View style={styles.actionContent}>
+            <Text style={styles.actionTitle}>Tema</Text>
+            <Text style={styles.actionSubtitle}>
+              {mode === 'dark' ? 'Mudar para claro' : 'Mudar para escuro'}
+            </Text>
           </View>
           <Icon name="chevron-right" size={24} color={colors.textSecondary} />
         </TouchableOpacity>

@@ -1,58 +1,50 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  FlatList,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors, spacing, typography, borderRadius } from '../constants/theme';
-
-interface Charge {
-  id: string;
-  clientName: string;
-  value: number;
-  status: 'paid' | 'pending' | 'overdue';
-  dueDate: string;
-  description: string;
-}
+import { useAuthStore } from '../store/authStore';
+import { chargesService, Charge } from '../services/chargesService';
+import { clientsService, Client } from '../services/clientsService';
+import AddChargeModal from '../components/AddChargeModal';
 
 export default function ChargesScreen() {
-  const charges: Charge[] = [
-    {
-      id: '1',
-      clientName: 'João Silva',
-      value: 150,
-      status: 'paid',
-      dueDate: '2024-10-15',
-      description: 'Mensalidade Outubro',
-    },
-    {
-      id: '2',
-      clientName: 'Maria Santos',
-      value: 200,
-      status: 'pending',
-      dueDate: '2024-10-20',
-      description: 'Serviço de Consultoria',
-    },
-    {
-      id: '3',
-      clientName: 'Pedro Costa',
-      value: 100,
-      status: 'overdue',
-      dueDate: '2024-10-10',
-      description: 'Assinatura Premium',
-    },
-    {
-      id: '4',
-      clientName: 'Ana Oliveira',
-      value: 300,
-      status: 'paid',
-      dueDate: '2024-10-12',
-      description: 'Projeto Desenvolvimento',
-    },
-  ];
+  const { user } = useAuthStore();
+  const [charges, setCharges] = useState<Charge[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const loadCharges = useCallback(async () => {
+    if (!user?.uid) return;
+    try {
+      setLoading(true);
+      const fetchedCharges = await chargesService.getCharges(user.uid);
+      setCharges(fetchedCharges);
+    } catch (error: any) {
+      console.error('Error loading charges:', error);
+      if (error.code === 'permission-denied') {
+        Alert.alert(
+          'Permissões do Firestore',
+          'As regras de segurança do Firestore não estão configuradas. Execute "firebase deploy --only firestore:rules" no terminal do projeto para permitir acesso aos dados.',
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.uid]);
+
+  useEffect(() => {
+    loadCharges();
+  }, [loadCharges]);
 
   const getStatusColor = (status: Charge['status']) => {
     switch (status) {
@@ -80,6 +72,14 @@ export default function ChargesScreen() {
     }
   };
 
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -89,7 +89,10 @@ export default function ChargesScreen() {
             {charges.length} cobranças registradas
           </Text>
         </View>
-        <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => setModalVisible(true)}
+        >
           <Icon name="plus" size={24} color="#ffffff" />
         </TouchableOpacity>
       </View>
@@ -97,7 +100,12 @@ export default function ChargesScreen() {
       <ScrollView style={styles.list}>
         {charges.map(charge => (
           <TouchableOpacity key={charge.id} style={styles.chargeCard}>
-            <View style={styles.cardGradient}>
+            <LinearGradient
+              colors={['rgba(138, 5, 190, 0.08)', 'rgba(0, 208, 158, 0.08)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.cardGradient}
+            >
               <View style={styles.chargeInfo}>
                 <Text style={styles.clientName}>{charge.clientName}</Text>
                 <Text style={styles.description}>{charge.description}</Text>
@@ -118,10 +126,16 @@ export default function ChargesScreen() {
                   R$ {charge.value.toFixed(2)}
                 </Text>
               </View>
-            </View>
+            </LinearGradient>
           </TouchableOpacity>
         ))}
       </ScrollView>
+
+      <AddChargeModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onChargeAdded={loadCharges}
+      />
     </View>
   );
 }
