@@ -1,5 +1,5 @@
 import auth from '@react-native-firebase/auth';
-// import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
@@ -56,28 +56,26 @@ export const useAuthStore = create<AuthState>(set => ({
   },
 
   signInWithGoogle: async () => {
-    // Temporarily disabled Google Signin
-    throw new Error('Google Signin temporarily disabled');
-    // await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-    // const response = await GoogleSignin.signIn();
-    // const idToken = response.data?.idToken;
-    // if (!idToken) {
-    //   throw new Error('No ID token found');
-    // }
-    // const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-    // const userCredential = await auth().signInWithCredential(googleCredential);
-    // const user = {
-    //   uid: userCredential.user.uid,
-    //   email: userCredential.user.email,
-    //   displayName: userCredential.user.displayName,
-    // };
-    // await AsyncStorage.setItem('user', JSON.stringify(user));
-    // set({ user });
+    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+    const response = await GoogleSignin.signIn();
+    const idToken = response.data?.idToken;
+    if (!idToken) {
+      throw new Error('No ID token found');
+    }
+    const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+    const userCredential = await auth().signInWithCredential(googleCredential);
+    const user = {
+      uid: userCredential.user.uid,
+      email: userCredential.user.email,
+      displayName: userCredential.user.displayName,
+    };
+    await AsyncStorage.setItem('user', JSON.stringify(user));
+    set({ user });
   },
 
   signOut: async () => {
     await auth().signOut();
-    // await GoogleSignin.signOut();
+    await GoogleSignin.signOut();
     await AsyncStorage.removeItem('user');
     await AsyncStorage.removeItem('email');
     await AsyncStorage.removeItem('password');

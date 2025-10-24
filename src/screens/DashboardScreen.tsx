@@ -1,7 +1,10 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, Dimensions } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import { borderRadius, colors, spacing, typography } from '../constants/theme';
+
+const screenWidth = Dimensions.get('window').width;
 
 // Mock data for charts
 const revenueData = {
@@ -78,23 +81,32 @@ export default function DashboardScreen() {
         </LinearGradient>
       </View>
 
-      {/* Revenue Chart */}
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Receita dos Últimos 7 Dias</Text>
-        <View style={styles.simpleChart}>
-          {revenueData.datasets[0].data.map((value, index) => (
-            <View key={index} style={styles.chartBar}>
-              <View
-                style={[
-                  styles.chartBarFill,
-                  { height: (value / 300) * 150 }, // Scale to max 150 height
-                ]}
-              />
-              <Text style={styles.chartLabel}>{revenueData.labels[index]}</Text>
-              <Text style={styles.chartValue}>R$ {value}</Text>
-            </View>
-          ))}
-        </View>
+        <LineChart
+          data={revenueData}
+          width={screenWidth - 64}
+          height={220}
+          chartConfig={{
+            backgroundColor: colors.surfaceDark,
+            backgroundGradientFrom: colors.surfaceDark,
+            backgroundGradientTo: colors.surfaceDark,
+            decimalPlaces: 0,
+            color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
+            labelColor: (opacity = 1) =>
+              `rgba(255, 255, 255, ${opacity * 0.7})`,
+            style: {
+              borderRadius: borderRadius.lg,
+            },
+            propsForDots: {
+              r: '6',
+              strokeWidth: '2',
+              stroke: '#3b82f6',
+            },
+          }}
+          bezier
+          style={styles.chart}
+        />
       </View>
 
       <View style={styles.statsGrid}>
@@ -139,37 +151,45 @@ export default function DashboardScreen() {
         </LinearGradient>
       </View>
 
-      {/* Charges Status Pie Chart */}
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Status das Cobranças</Text>
-        <View style={styles.pieChart}>
-          {chargesStatusData.map((item, index) => (
-            <View key={index} style={styles.pieItem}>
-              <View
-                style={[styles.pieColor, { backgroundColor: item.color }]}
-              />
-              <Text style={styles.pieLabel}>
-                {item.name}: {item.value}
-              </Text>
-            </View>
-          ))}
-        </View>
+        <PieChart
+          data={chargesStatusData}
+          width={screenWidth - 64}
+          height={220}
+          chartConfig={{
+            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+          }}
+          accessor="value"
+          backgroundColor="transparent"
+          paddingLeft="15"
+          absolute
+        />
       </View>
 
-      {/* Monthly Revenue Bar Chart */}
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Receita Mensal (Últimos 6 Meses)</Text>
-        <View style={styles.simpleChart}>
-          {monthlyRevenueData.datasets[0].data.map((value, index) => (
-            <View key={index} style={styles.chartBar}>
-              <View style={[styles.chartBarFill, styles.chartBarFillGreen]} />
-              <Text style={styles.chartLabel}>
-                {monthlyRevenueData.labels[index]}
-              </Text>
-              <Text style={styles.chartValue}>R$ {value}</Text>
-            </View>
-          ))}
-        </View>
+        <BarChart
+          data={monthlyRevenueData}
+          width={screenWidth - 64}
+          height={220}
+          yAxisLabel="R$ "
+          yAxisSuffix=""
+          chartConfig={{
+            backgroundColor: colors.surfaceDark,
+            backgroundGradientFrom: colors.surfaceDark,
+            backgroundGradientTo: colors.surfaceDark,
+            decimalPlaces: 0,
+            color: (opacity = 1) => `rgba(16, 185, 129, ${opacity})`,
+            labelColor: (opacity = 1) =>
+              `rgba(255, 255, 255, ${opacity * 0.7})`,
+            style: {
+              borderRadius: borderRadius.lg,
+            },
+          }}
+          style={styles.chart}
+          showValuesOnTopOfBars
+        />
       </View>
     </ScrollView>
   );

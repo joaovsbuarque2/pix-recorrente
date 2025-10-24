@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from 'react-native-paper';
 import { colors, spacing, typography, borderRadius } from '../constants/theme';
 import { useAuthStore } from '../store/authStore';
@@ -37,15 +38,20 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
+      <LinearGradient
+        colors={['#8b5cf6', '#7c3aed', '#6d28d9']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
             {user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U'}
           </Text>
         </View>
         <Text style={styles.name}>{user?.displayName || 'Usuário'}</Text>
-        <Text style={styles.email}>{user?.email}</Text>
-      </View>
+        <Text style={styles.emailHeader}>{user?.email}</Text>
+      </LinearGradient>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Informações da Conta</Text>
@@ -147,37 +153,42 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     padding: spacing.xl,
-    paddingTop: spacing.xxl,
-    backgroundColor: colors.surface,
+    paddingTop: spacing.xxl * 1.5,
+    paddingBottom: spacing.xxl,
     marginBottom: spacing.lg,
   },
   avatar: {
-    width: 80,
-    height: 80,
+    width: 100,
+    height: 100,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.primary,
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
   avatarText: {
-    fontSize: 32,
+    fontSize: 40,
     fontWeight: '700',
-    color: '#ffffff',
+    color: colors.primary,
   },
   name: {
     ...typography.h2,
-    color: colors.textDark,
+    color: '#ffffff',
     marginBottom: spacing.xs,
+    fontWeight: '700',
   },
   email: {
     ...typography.body,
     color: colors.textSecondaryDark,
+  },
+  emailHeader: {
+    ...typography.body,
+    color: 'rgba(255, 255, 255, 0.9)',
   },
   section: {
     paddingHorizontal: spacing.lg,

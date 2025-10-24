@@ -1,7 +1,7 @@
 /* eslint-disable react/react-in-jsx-scope */
 import React, { useEffect } from 'react';
 import auth from '@react-native-firebase/auth';
-// import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -10,12 +10,9 @@ import { RootNavigator } from './src/navigation/RootNavigator';
 import { useAuthStore } from './src/store/authStore';
 import { useThemeStore } from './src/store/themeStore';
 
-// Temporarily disabled Google Signin configuration
-// GoogleSignin.configure({
-//   webClientId:
-//     '873884409603-oks9r4o4iu4n2ukd6tqasdti5d3he5o6.apps.googleusercontent.com',
-//   offlineAccess: true,
-// });
+GoogleSignin.configure({
+  offlineAccess: false,
+});
 
 function App(): JSX.Element {
   const setUser = useAuthStore(state => state.setUser);

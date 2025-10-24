@@ -70,18 +70,45 @@ export default function ClientsScreen() {
       </View>
 
       <ScrollView style={styles.list}>
-        {clients.map(client => (
-          <TouchableOpacity key={client.id} style={styles.clientCard}>
-            <LinearGradient
-              colors={['rgba(138, 5, 190, 0.08)', 'rgba(0, 208, 158, 0.08)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.cardGradient}
-            >
+        {clients.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Icon name="account-group" size={64} color={colors.textSecondary} />
+            <Text style={styles.emptyText}>Nenhum cliente cadastrado</Text>
+            <Text style={styles.emptySubtext}>
+              Clique no botão + para adicionar seu primeiro cliente
+            </Text>
+          </View>
+        ) : (
+          clients.map(client => (
+            <TouchableOpacity key={client.id} style={styles.clientCard}>
+              <View style={styles.clientIconContainer}>
+                <LinearGradient
+                  colors={['#8b5cf6', '#7c3aed']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.clientIcon}
+                >
+                  <Icon name="account" size={32} color="#fff" />
+                </LinearGradient>
+              </View>
               <View style={styles.clientInfo}>
                 <Text style={styles.clientName}>{client.name}</Text>
-                <Text style={styles.clientEmail}>{client.email}</Text>
-                <Text style={styles.clientPhone}>{client.phone}</Text>
+                <View style={styles.clientDetail}>
+                  <Icon
+                    name="email"
+                    size={14}
+                    color={colors.textSecondaryDark}
+                  />
+                  <Text style={styles.clientEmail}>{client.email}</Text>
+                </View>
+                <View style={styles.clientDetail}>
+                  <Icon
+                    name="phone"
+                    size={14}
+                    color={colors.textSecondaryDark}
+                  />
+                  <Text style={styles.clientPhone}>{client.phone}</Text>
+                </View>
               </View>
               <View style={styles.clientStats}>
                 <View
@@ -100,9 +127,9 @@ export default function ClientsScreen() {
                   R$ {client.totalPaid.toFixed(2)}
                 </Text>
               </View>
-            </LinearGradient>
-          </TouchableOpacity>
-        ))}
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
 
       <AddClientModal
@@ -165,7 +192,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: spacing.lg,
     borderRadius: borderRadius.lg,
-    backgroundColor: 'rgba(138, 5, 190, 0.05)',
+    backgroundColor: colors.surfaceDark,
   },
   clientInfo: {
     flex: 1,
@@ -216,5 +243,41 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.textDark,
     fontFamily: 'Inter-SemiBold',
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xxl * 2,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.textDark,
+    marginTop: spacing.lg,
+    fontFamily: 'Inter-SemiBold',
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: colors.textSecondaryDark,
+    marginTop: spacing.sm,
+    textAlign: 'center',
+    paddingHorizontal: spacing.xl,
+    fontFamily: 'Inter-Regular',
+  },
+  clientIconContainer: {
+    marginRight: spacing.md,
+  },
+  clientIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  clientDetail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: 2,
   },
 });

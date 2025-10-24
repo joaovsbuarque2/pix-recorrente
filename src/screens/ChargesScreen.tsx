@@ -98,18 +98,61 @@ export default function ChargesScreen() {
       </View>
 
       <ScrollView style={styles.list}>
-        {charges.map(charge => (
-          <TouchableOpacity key={charge.id} style={styles.chargeCard}>
-            <LinearGradient
-              colors={['rgba(138, 5, 190, 0.08)', 'rgba(0, 208, 158, 0.08)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.cardGradient}
-            >
+        {charges.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Icon name="currency-usd" size={64} color={colors.textSecondary} />
+            <Text style={styles.emptyText}>Nenhuma cobrança registrada</Text>
+            <Text style={styles.emptySubtext}>
+              Clique no botão + para criar sua primeira cobrança
+            </Text>
+          </View>
+        ) : (
+          charges.map(charge => (
+            <View key={charge.id} style={styles.chargeCard}>
+              <View style={styles.chargeIconContainer}>
+                <LinearGradient
+                  colors={
+                    charge.status === 'paid'
+                      ? ['#10b981', '#059669']
+                      : charge.status === 'pending'
+                      ? ['#f59e0b', '#d97706']
+                      : ['#ef4444', '#dc2626']
+                  }
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.chargeIcon}
+                >
+                  <Icon
+                    name={
+                      charge.status === 'paid'
+                        ? 'check-circle'
+                        : charge.status === 'pending'
+                        ? 'clock-outline'
+                        : 'alert-circle'
+                    }
+                    size={28}
+                    color="#fff"
+                  />
+                </LinearGradient>
+              </View>
               <View style={styles.chargeInfo}>
                 <Text style={styles.clientName}>{charge.clientName}</Text>
-                <Text style={styles.description}>{charge.description}</Text>
-                <Text style={styles.dueDate}>Vencimento: {charge.dueDate}</Text>
+                <View style={styles.chargeDetail}>
+                  <Icon
+                    name="text"
+                    size={14}
+                    color={colors.textSecondaryDark}
+                  />
+                  <Text style={styles.description}>{charge.description}</Text>
+                </View>
+                <View style={styles.chargeDetail}>
+                  <Icon
+                    name="calendar"
+                    size={14}
+                    color={colors.textSecondaryDark}
+                  />
+                  <Text style={styles.dueDate}>Vence em {charge.dueDate}</Text>
+                </View>
               </View>
               <View style={styles.chargeStats}>
                 <View
@@ -126,9 +169,9 @@ export default function ChargesScreen() {
                   R$ {charge.value.toFixed(2)}
                 </Text>
               </View>
-            </LinearGradient>
-          </TouchableOpacity>
-        ))}
+            </View>
+          ))
+        )}
       </ScrollView>
 
       <AddChargeModal
@@ -191,7 +234,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: spacing.lg,
     borderRadius: borderRadius.lg,
-    backgroundColor: 'rgba(138, 5, 190, 0.05)',
+    backgroundColor: colors.surfaceDark,
   },
   chargeInfo: {
     flex: 1,
@@ -236,5 +279,41 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.textDark,
     fontFamily: 'Inter-SemiBold',
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xxl * 2,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.textDark,
+    marginTop: spacing.lg,
+    fontFamily: 'Inter-SemiBold',
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: colors.textSecondaryDark,
+    marginTop: spacing.sm,
+    textAlign: 'center',
+    paddingHorizontal: spacing.xl,
+    fontFamily: 'Inter-Regular',
+  },
+  chargeIconContainer: {
+    marginRight: spacing.md,
+  },
+  chargeIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chargeDetail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: 2,
   },
 });
